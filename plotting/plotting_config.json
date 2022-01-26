@@ -1,0 +1,11 @@
+{
+    "colors":
+        {
+            "ridge": "#2A2B2DFF",
+            "cnn"  : "#D9514EFF",
+            "fcnn" : "#2DA8D8FF"
+        },
+    "models": ["ridge", "cnn", "fcnn"],
+    "octave_english_participants": ["YH00", "YH01", "YH02", "YH03", "YH04", "YH07", "YH09", "YH10", "YH11", "YH14", "YH15", "YH16", "YH17", "YH18", "YH19", "YH20"],
+    "octave_dutch_participants": ["YH07", "YH09", "YH10", "YH11", "YH14", "YH15", "YH16", "YH17", "YH18", "YH19", "YH20"]
+}
