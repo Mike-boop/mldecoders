@@ -1,4 +1,3 @@
-from statistics import mean
 from pipeline.dnn import CNN
 from pipeline.ridge import Ridge
 import torch
@@ -6,10 +5,13 @@ import os
 from pipeline.datasets import HugoMapped, OctaveMapped
 from torch.utils.data import DataLoader
 from pipeline.helpers import correlation
-from torch.optim import NAdam, AdamW
+from torch.optim import NAdam
 import numpy as np
 import pickle
 import optuna
+from collections.abc import Iterable
+import operator
+import functools
 
 torch.manual_seed(0)
 np.random.seed(0)
@@ -23,8 +25,6 @@ def train_dnn(data_dir,
               participants,
               checkpoint_path,
               dataset='hugo',
-              train_condition='clean',
-              val_condition='clean',
               model_handle=CNN,
               train_parts=range(9),
               val_parts=range(9,12),
@@ -36,6 +36,10 @@ def train_dnn(data_dir,
               optuna_trial=None,
               seed=0,
               **mdl_kwargs):
+
+    '''
+    if dataset is 'octave', expect train (val) parts to be a dictionary of {condition:trials} pairs
+    '''
 
     if seed is not None:
 
@@ -50,7 +54,10 @@ def train_dnn(data_dir,
 
     # configure dataloaders
 
-    if dataset=='hugo':    
+    if dataset=='hugo':
+
+        assert isinstance(train_parts, Iterable) and type(train_parts) is not dict
+        assert isinstance(val_parts, Iterable) and type(val_parts) is not dict
 
         train_dataset = HugoMapped(train_parts, data_dir, participant=participants, num_input=mdl.input_length)
         train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler = torch.randperm(len(train_dataset)), num_workers=16, pin_memory=True)
@@ -60,10 +67,15 @@ def train_dnn(data_dir,
 
     elif dataset=='octave':
 
-        train_dataset = OctaveMapped(train_parts, data_dir, participant=participants, num_input=mdl.input_length, condition=train_condition)
+        assert type(train_parts) == dict
+        assert type(val_parts) == dict
+
+        train_datasets = [OctaveMapped(train_parts[cond], data_dir, participant=participants, num_input=mdl.input_length, condition=cond) for cond in train_parts]
+        train_dataset = functools.reduce(operator.add, train_datasets)    
         train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler = torch.randperm(len(train_dataset)), num_workers=16, pin_memory=True)
 
-        val_dataset = OctaveMapped(val_parts, data_dir, participant=participants, num_input=mdl.input_length, condition=val_condition)
+        val_datasets = [OctaveMapped(val_parts[cond], data_dir, participant=participants, num_input=mdl.input_length, condition=cond) for cond in val_parts]
+        val_dataset = functools.reduce(operator.add, val_datasets)
         val_loader = DataLoader(val_dataset, batch_size=1250, sampler = torch.randperm(len(val_dataset)), num_workers=16, pin_memory=True)
 
     # early stopping parameters
@@ -137,9 +149,7 @@ def train_ridge(data_dir,
                 train_parts,
                 val_parts,
                 alphas=np.logspace(-7,7, 15),
-                dataset='hugo',
-                train_condition='clean',
-                val_condition='lb'):
+                dataset='hugo'):
     
     # fetch data
 
@@ -152,8 +162,14 @@ def train_ridge(data_dir,
 
     elif dataset=='octave':
 
-        train_dataset = OctaveMapped(train_parts, data_dir, participant=participants, num_input=mdl.num_lags, condition=train_condition)
-        val_dataset = OctaveMapped(val_parts, data_dir, participant=participants, num_input=mdl.num_lags, condition=val_condition)
+        assert type(train_parts) == dict
+        assert type(val_parts) == dict
+
+        train_datasets = [OctaveMapped(train_parts[cond], data_dir, participant=participants, num_input=mdl.num_lags, condition=cond) for cond in train_parts]
+        train_dataset = functools.reduce(operator.add, train_datasets)    
+
+        val_datasets = [OctaveMapped(val_parts[cond], data_dir, participant=participants, num_input=mdl.num_lags, condition=cond) for cond in val_parts]
+        val_dataset = functools.reduce(operator.add, val_datasets)
 
     train_eeg, train_stim = train_dataset.eeg, train_dataset.stim
     val_eeg, val_stim = val_dataset.eeg, val_dataset.stim

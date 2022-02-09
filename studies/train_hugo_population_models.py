@@ -152,7 +152,7 @@ def main():
 
      setup_results_dir()
      #tune_dnns(models=['fcnn'], load=False)
-     train_models()
+     #train_models()
      for participant in range(13):
           get_predictions(participant)
 

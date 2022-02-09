@@ -117,9 +117,10 @@ def process_stim(condition, part):
 
     if condition in ["lb", "mb", "hb"]:
         S_a = np.pad(S_a, (125, 0))
-        S_a = np.pad(S_a, (0, S_u.size-S_a.size))
 
-    return S_u, S_a
+    length = min(S_a.size, S_u.size)
+
+    return S_u[:length], S_a[:length]
 
 if __name__ == '__main__':
 

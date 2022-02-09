@@ -8,7 +8,7 @@ from scipy.stats import ranksums, wilcoxon, ttest_rel
 from statsmodels.stats import multitest
 
 results_dir = "results/0.5-8Hz"
-results_path = os.path.join(results_dir, 'predictions', 'octave_subject_independent')
+results_path = os.path.join(results_dir, 'predictions', 'octave_population')
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
 colors = plotting_config['colors']

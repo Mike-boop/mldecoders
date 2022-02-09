@@ -12,6 +12,7 @@ from mne.io import read_raw_brainvision
 from scipy.signal import hilbert
 from scipy.stats import zscore
 import os
+from copy import deepcopy
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 
@@ -79,30 +80,42 @@ class OctaveMapped(Dataset):
         stimsa = []
         stimsu = []
 
-        with h5py.File(data_dir, "r") as f:
+        if type(participant) is not list:
+            participant = [participant]
 
-            for each_part in parts_list:
-                eeg = f[f"{condition}/part{each_part}/{participant}"][:][channels]
-                S_u = f[f"{condition}/part{each_part}/unattended"][:]
-                S_a = f[f"{condition}/part{each_part}/attended"][:]
+        for p in participant:
 
-                if S_a.size < eeg.shape[1]:
-                    S_a = np.pad(S_a, (0, eeg.shape[1]-S_a.size))
-                if S_u.size < eeg.shape[1]:
-                    S_u = np.pad(S_u, (0, eeg.shape[1]-S_u.size))
-                if S_a.size > eeg.shape[1]:
-                    S_a = S_a[:eeg.shape[1]]
-                if S_u.size > eeg.shape[1]:
-                    S_u = S_u[:eeg.shape[1]]
+            with h5py.File(data_dir, "r") as f:
 
-                eegs.append(eeg)
-                stimsa.append(S_a)
-                stimsu.append(S_u)
+                for each_part in parts_list:
+                    eeg = f[f"{condition}/part{each_part}/{p}"][:][channels]
+                    S_u = f[f"{condition}/part{each_part}/unattended"][:]
+                    S_a = f[f"{condition}/part{each_part}/attended"][:]
+
+                    length = min(eeg.shape[1], S_a.size, S_u.size)
+
+                    if condition in ["lb", "mb", "hb"]:
+                        eegs.append(eeg[:,125:length])
+                        stimsa.append(S_a[125:length])
+                        stimsu.append(S_u[125:length])
+
+                    else:
+                        eegs.append(eeg[:,:length])
+                        stimsa.append(S_a[:length])
+                        stimsu.append(S_u[:length])
             
         self.eeg = np.hstack(eegs)
         self.stim_a = np.hstack(stimsa)
         self.stim_u = np.hstack(stimsu)
         self.stim = self.stim_a
+
+    def __add__(self, other):
+        copy = deepcopy(self)
+        copy.eeg = np.hstack([self.eeg, other.eeg])
+        copy.stim_a = np.hstack([self.stim_a, other.stim_a])
+        copy.stim_u = np.hstack([self.stim_u, other.stim_u])
+        copy.stim = np.hstack([self.stim, other.stim])
+        return copy
 
     def __getitem__(self, idx):
         return self.eeg[:, idx:idx+self.num_input], self.stim_a[idx]

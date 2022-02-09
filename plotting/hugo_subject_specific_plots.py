@@ -4,6 +4,7 @@ import numpy as np
 import json
 import os
 from pipeline.helpers import get_scores
+import pandas as pd
 
 np.random.seed(0)
 
@@ -14,34 +15,21 @@ results_dir = "results/0.5-8Hz"
 
 path = os.path.join(results_dir, 'predictions', 'hugo_subject_specific')
 
-ridge_predictions = [np.load(os.path.join(path, f"ridge_predictions_P{participant:02d}.npy")) for participant in range(13)]
-cnn_predictions = [np.load(os.path.join(path, f"cnn_predictions_P{participant:02d}.npy")) for participant in range(13)]
-fcnn_predictions = [np.load(os.path.join(path, f"fcnn_predictions_P{participant:02d}.npy")) for participant in range(13)]
+predictions = pd.DataFrame.from_dict({
+    (mdl, participant):
+        np.load(os.path.join(path, f"{mdl}_predictions_P{participant:02d}.npy")) for participant in range(13) for mdl in models
+})
 ground_truth = np.load(os.path.join(path, "ground_truth.npy"))
 
-scores = {
-    'ridge':[get_scores(pred, ground_truth, batch_size=250) for pred in ridge_predictions],
-    'cnn'  :[get_scores(pred, ground_truth, batch_size=250) for pred in cnn_predictions],
-    'fcnn' :[get_scores(pred, ground_truth, batch_size=250) for pred in fcnn_predictions]
-}
-
-null_scores = {
-    'ridge':[get_scores(pred, ground_truth, batch_size=250, null=True) for pred in ridge_predictions],
-    'cnn'  :[get_scores(pred, ground_truth, batch_size=250, null=True) for pred in cnn_predictions],
-    'fcnn' :[get_scores(pred, ground_truth, batch_size=250, null=True) for pred in fcnn_predictions]
-}
-
-null_medians = {
-    'ridge':[np.median(score) for score in null_scores['ridge']],
-    'cnn'  :[np.median(score) for score in null_scores['cnn']],
-    'fcnn' :[np.median(score) for score in null_scores['fcnn']]
-}
+scores = predictions.apply(lambda x: get_scores(x, ground_truth, batch_size=250))
+null_scores = predictions.apply(lambda x: get_scores(x, ground_truth, batch_size=250, null=True))
+null_medians = null_scores.median()
 
 ####################
 # Subject-level plot
 ####################
 
-ridge_means = [np.mean(score) for score in scores['ridge']]
+ridge_means = scores['ridge'].mean()
 sorted_idx = np.argsort(ridge_means)
 
 width=1/5
@@ -49,7 +37,7 @@ for i, model in enumerate(models):
 
     x = np.arange(13) + width*(i-1)
 
-    plt.boxplot([scores[model][i] for i in sorted_idx],
+    plt.boxplot([scores[(model, i)] for i in sorted_idx],
                 positions = x,
                 widths=0.9*width,
                 patch_artist=True,
@@ -65,7 +53,7 @@ plt.axhline(0, color='black', linestyle='dotted', linewidth=1, zorder=-np.inf)
 labels = ["Ridge", "CNN", "FCNN", "Noise Level"]
 handles = [plt.Rectangle((0,0),1,1, facecolor=colors[mdl], edgecolor='black') for mdl in models] + \
             [Line2D([0], [0], c='#5ce600')]
-leg = plt.legend(handles, labels, loc=(0.48,-.012), frameon=False, ncol=2, handleheight=.5, labelspacing=0.05, columnspacing=1)
+leg = plt.legend(handles, labels, frameon=False, loc=(0.03,0.01), ncol=2, handleheight=.7, labelspacing=0.25, columnspacing=1)
 
 plt.yticks(np.round(np.linspace(-1, 1, 11),1), np.round(np.linspace(-1, 1, 11),1))
 plt.xticks(x-0.2, range(1,14))
@@ -88,47 +76,20 @@ plt.close()
 correlation_windows = list(range(3, 16)) + list(range(20, 51, 10)) + list(range(125, 1251, 125))
 correlation_windows = np.array(correlation_windows)
 
-means = {
-    'ridge':[],
-    'cnn':[],
-    'fcnn':[]
-}
-
-null_means = {
-    'ridge':[],
-    'cnn':[],
-    'fcnn':[]
-}
-
-stds = {
-    'ridge':[],
-    'cnn':[],
-    'fcnn':[]
-}
-
-null_stds = {
-    'ridge':[],
-    'cnn':[],
-    'fcnn':[]
-}
+means = {'ridge':[], 'cnn':[],'fcnn':[]}
+null_means = {'ridge':[], 'cnn':[],'fcnn':[]}
+stds = {'ridge':[], 'cnn':[],'fcnn':[]}
+null_stds = {'ridge':[], 'cnn':[],'fcnn':[]}
 
 for window in correlation_windows:
-    scores = {
-        'ridge':[get_scores(pred, ground_truth, batch_size=window) for pred in ridge_predictions],
-        'cnn'  :[get_scores(pred, ground_truth, batch_size=window) for pred in cnn_predictions],
-        'fcnn' :[get_scores(pred, ground_truth, batch_size=window) for pred in fcnn_predictions]
-    }
-    null_scores = {
-        'ridge':[get_scores(pred, ground_truth, batch_size=window, null=True) for pred in ridge_predictions],
-        'cnn'  :[get_scores(pred, ground_truth, batch_size=window, null=True) for pred in cnn_predictions],
-        'fcnn' :[get_scores(pred, ground_truth, batch_size=window, null=True) for pred in fcnn_predictions]
-    }
+    scores = predictions.apply(lambda x: get_scores(x, ground_truth, batch_size=window))
+    null_scores = predictions.apply(lambda x: get_scores(x, ground_truth, batch_size=window, null=True))
 
     for model in models:
-        means[model].append(np.mean(scores[model]))
-        null_means[model].append(np.mean(null_scores[model]))
-        stds[model].append(np.std(scores[model], ddof=1))
-        null_stds[model].append(np.std(null_scores[model], ddof=1))
+        means[model].append(scores[model].to_numpy().mean())
+        null_means[model].append(null_scores[model].to_numpy().mean())
+        stds[model].append(np.std(scores[model].to_numpy(), ddof=1))
+        null_stds[model].append(np.std(null_scores[model].to_numpy(), ddof=1))
 
 for model in models:
     plt.plot(correlation_windows*1/125,means[model], color=colors[model], zorder=np.inf, linestyle='-')

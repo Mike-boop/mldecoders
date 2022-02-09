@@ -21,6 +21,17 @@ except KeyError:
 
 print(f'running analysis with results directory {results_path} and data file {data_file}')
 
+train_parts={
+    'lb':[1,2],
+    'hb':[1,2],
+    'clean':[1,2]
+}
+
+val_parts={
+    'lb':[3,4],
+    'hb':[3,4]
+}
+
 def setup_results_dir():
 
     Path(os.path.join(results_path, 'trained_models', 'octave_subject_specific')).mkdir(parents=True, exist_ok=True)
@@ -40,14 +51,13 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
             print('>',lr)
             accuracy, _ = train_dnn(data_file, participant, None, **cnn_train_params, lr=lr, epochs=20,
                                     early_stopping_patience=3, model_handle=CNN, **cnn_mdl_kwargs, dataset='octave',
-                                    train_parts=[1,2,3, 4], val_parts=[1, 2, 3, 4], train_condition='clean',
-                                    val_condition='lb', optuna_trial=trial)
+                                    train_parts=train_parts, val_parts=val_parts, optuna_trial=trial)
             return accuracy
 
         cnn_study = optuna.create_study(
           direction="maximize",
-          sampler=optuna.samplers.RandomSampler(seed=0),
-          pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=2)
+          sampler=optuna.samplers.RandomSampler(seed=0)
+          #pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=2)
         )
         cnn_study.optimize(cnn_objective, n_trials=30)
         cnn_summary = cnn_study.trials_dataframe()
@@ -70,8 +80,7 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
             print('>',lr)
             accuracy, _ = train_dnn(data_file, participant, None, **fcnn_train_params, lr=lr, epochs=20,
                                     early_stopping_patience=3, model_handle=FCNN, **fcnn_mdl_kwargs, dataset='octave',
-                                    train_parts=[1,2,3, 4], val_parts=[1, 2, 3, 4], train_condition='clean',
-                                    val_condition='lb', optuna_trial=trial)
+                                    train_parts=train_parts, val_parts=val_parts, optuna_trial=trial)
             return accuracy
 
         fcnn_study = optuna.create_study(
@@ -94,8 +103,8 @@ def train_models(participant, models=['cnn', 'fcnn', 'ridge']):
         cnn_train_params = json.load(open(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'cnn_train_params_{participant}.json'), 'r'))  
     
         _, cnn_ckpt = train_dnn(data_file, participant, None, **cnn_best_mdl_kwargs, **cnn_train_params,
-                            epochs=1, model_handle=CNN, dataset='octave', train_parts=[1,2,3,4], val_parts=[1,2,3,4],
-                            early_stopping_patience=5, train_condition='clean', val_condition='lb')
+                            epochs=30, model_handle=CNN, dataset='octave', train_parts=train_parts,
+                            val_parts=val_parts, early_stopping_patience=5)
 
         torch.save(cnn_ckpt, os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'cnn_{participant}.ckpt'))
 
@@ -105,13 +114,13 @@ def train_models(participant, models=['cnn', 'fcnn', 'ridge']):
         fcnn_train_params = json.load(open(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'fcnn_train_params_{participant}.json'), 'r'))  
 
         _, fcnn_ckpt = train_dnn(data_file, participant, None, **fcnn_best_mdl_kwargs, **fcnn_train_params,
-                                epochs=30, model_handle=FCNN, dataset='octave', train_parts=[1,2,3,4], val_parts=[1,2,3,4],
-                                early_stopping_patience=5, train_condition='clean', val_condition='lb')
+                                epochs=30, model_handle=FCNN, dataset='octave', train_parts=train_parts,
+                                val_parts=val_parts, early_stopping_patience=5)
         
         torch.save(fcnn_ckpt, os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'fcnn_{participant}.ckpt'))
     
     if 'ridge' in models:
-        train_ridge(data_file, participant, os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'ridge_{participant}.pk'), 0, 50, [1,2,3,4], [1,2,3,4], dataset='octave', train_condition='clean', val_condition='lb') 
+        train_ridge(data_file, participant, os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'ridge_{participant}.pk'), 0, 50, train_parts, val_parts, dataset='octave') 
 
 
 def get_predictions(participant, condition='clean'):
@@ -125,14 +134,19 @@ def get_predictions(participant, condition='clean'):
     fcnn.load_state_dict(torch.load(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'fcnn_{participant}.ckpt')))
     ridge = pickle.load(open(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'ridge_{participant}.pk'), "rb"))
 
-    test_dataset = OctaveMapped([1,2,3,4], data_file, participant=participant, num_input=cnn.input_length, condition=condition)
-    test_loader = DataLoader(test_dataset, batch_size=1250, num_workers=16)
+    if condition == 'clean':
+        test_dataset = OctaveMapped([3,4], data_file, participant=participant, num_input=cnn.input_length, condition=condition)
+        test_loader = DataLoader(test_dataset, batch_size=1250, num_workers=16)
+    else:
+        test_dataset = OctaveMapped([1,2,3,4], data_file, participant=participant, num_input=cnn.input_length, condition=condition)
+        test_loader = DataLoader(test_dataset, batch_size=1250, num_workers=16)
 
     fcnn_predictions = get_dnn_predictions(fcnn, test_loader)
     cnn_predictions = get_dnn_predictions(cnn, test_loader)
     ridge_predictions = ridge.predict(test_dataset.eeg.T).flatten()[:-cnn.input_length]
     attended_ground_truth = test_dataset.stim_a[:-cnn.input_length]
     unattended_ground_truth = test_dataset.stim_u[:-cnn.input_length]
+    
     assert ridge_predictions.size == cnn_predictions.size == fcnn_predictions.size
 
     np.save(os.path.join(results_path, 'predictions', 'octave_subject_specific', f'ridge_predictions_{participant}_{condition}.npy'), ridge_predictions)
@@ -144,10 +158,11 @@ def get_predictions(participant, condition='clean'):
 def main():#exclude YH08 who has bad lb data
 
     setup_results_dir()
-    for participant in ["YH04"]: #["YH00", "YH01", "YH02", "YH03",
-                        #"YH04", "YH07", "YH09", "YH10",
-                        #"YH11", "YH14", "YH15", "YH16", 
-                        #"YH17", "YH18", "YH19", "YH20"]:
+    for participant in ["YH00", "YH01", "YH02", "YH03",
+                        "YH04", "YH06", "YH07", "YH08",
+                        "YH09", "YH10", "YH11", "YH14",
+                        "YH15", "YH16", "YH17", "YH18",
+                        "YH19", "YH20"]:
 
         tune_lrs(participant)
         train_models(participant)

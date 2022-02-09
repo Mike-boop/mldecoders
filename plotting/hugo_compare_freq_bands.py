@@ -3,8 +3,8 @@ import json
 import os
 from pipeline.helpers import get_scores
 import matplotlib.pyplot as plt
+import pandas as pd
 
-np.random.seed(0)
 study = 'hugo_subject_specific'
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
@@ -19,27 +19,19 @@ for i, freq_band in enumerate(freq_bands):
     results_dir = os.path.join("results", freq_band)
     path = os.path.join(results_dir, 'predictions', study)
 
-    ridge_predictions = [np.load(os.path.join(path, f"ridge_predictions_P{participant:02d}.npy")) for participant in range(13)]
-    cnn_predictions = [np.load(os.path.join(path, f"cnn_predictions_P{participant:02d}.npy")) for participant in range(13)]
-    fcnn_predictions = [np.load(os.path.join(path, f"fcnn_predictions_P{participant:02d}.npy")) for participant in range(13)]
+    predictions = {
+        (mdl, participant):
+            np.load(os.path.join(path, f"{mdl}_predictions_P{participant:02d}.npy")) for participant in range(13) for mdl in models
+    }
+    predictions = pd.DataFrame.from_dict(predictions)
     ground_truth = np.load(os.path.join("results/0.5-8Hz", "predictions", "hugo_subject_specific", "ground_truth.npy"))
 
-    scores = {
-        'ridge':[get_scores(pred, ground_truth, batch_size=250) for pred in ridge_predictions],
-        'cnn'  :[get_scores(pred, ground_truth, batch_size=250) for pred in cnn_predictions],
-        'fcnn' :[get_scores(pred, ground_truth, batch_size=250) for pred in fcnn_predictions]
-    }
-
-    mean_scores = {
-        'ridge':[np.mean(participant_scores) for participant_scores in scores['ridge']],
-        'cnn'  :[np.mean(participant_scores) for participant_scores in scores['cnn']],
-        'fcnn' :[np.mean(participant_scores) for participant_scores in scores['fcnn']]
-    }
+    scores = predictions.apply(lambda x: get_scores(x, ground_truth, batch_size=250))
 
 
     for j, mdl in enumerate(models):
 
-        plt.boxplot(mean_scores[mdl], positions=[i+(j-1)/4], patch_artist=True,
+        plt.boxplot(scores[mdl].mean(), positions=[i+(j-1)/4], patch_artist=True,
                     boxprops={'facecolor':colors[mdl], 'alpha':1, 'edgecolor':'black'},
                     flierprops={'marker':'x', 'markersize':2.5, 'markeredgecolor':'grey'},
                     whiskerprops={'color':'grey'},
@@ -50,8 +42,10 @@ ax = plt.gca()
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 
+plt.title("Decoding performance in different EEG frequency bands")
+
 plt.xticks(np.arange(len(freq_bands)), freq_bands)
-plt.xlabel("Frequency band")
+plt.xlabel("EEG Frequency band")
 plt.ylabel("Mean reconstruction score")
 
 labels = ["Ridge", "CNN", "FCNN"]

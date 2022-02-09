@@ -2,7 +2,7 @@ import numpy as np
 import json
 import os
 from pipeline.helpers import get_scores
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, ttest_rel
 from statsmodels.stats import multitest
 
 np.random.seed(0)
@@ -36,7 +36,6 @@ null_scores = {
 
 ridge_means = [np.mean(score) for score in scores['ridge']]
 sorted_idx = np.argsort(ridge_means)
-print(ridge_means)
 
 # test whether model scores are significantly different to null distributions
 
@@ -99,3 +98,14 @@ with open(os.path.join(results_dir, 'p_vals', f'{study}.txt'), 'w') as f:
     f.writelines(format_pvalues(p_ridge_fcnn))
     f.writelines('\ncnn vs fcnn\n')
     f.writelines(format_pvalues(p_cnn_fcnn))
+
+# population analysis
+
+mean_scores = {k:[np.mean(scores[k][i]) for i in range(13)] for k in scores.keys()}
+
+p_ridge_cnn = ttest_rel(mean_scores['ridge'], mean_scores['cnn'], alternative='less')[1]
+p_ridge_fcnn = ttest_rel(mean_scores['ridge'], mean_scores['fcnn'], alternative='less')[1]
+p_fcnn_cnn = ttest_rel(mean_scores['fcnn'], mean_scores['cnn'], alternative='two-sided')[1]
+
+[p_ridge_cnn, p_ridge_fcnn, p_fcnn_cnn] = np.array([p_ridge_cnn, p_ridge_fcnn, p_fcnn_cnn])*3
+print([p_ridge_cnn, p_ridge_fcnn, p_fcnn_cnn])

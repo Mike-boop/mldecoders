@@ -53,7 +53,7 @@ def main():
 
     setup_results_dir()
     for participant in ["YH00", "YH01", "YH02", "YH03",
-                        "YH04", "YH07", "YH09", "YH10",
+                        "YH04", "YH06", "YH07", "YH09", "YH10",
                         "YH11", "YH14", "YH15", "YH16", 
                         "YH17", "YH18", "YH19", "YH20", "YH08"]:
 
