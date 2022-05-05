@@ -1,7 +1,7 @@
 # mldecoders
 
 This repository contains all of the code used in our publication "Robust decoding of the speech envelope from EEG recordings through deep neural networks" 
-(Thornton, Mandic and Reichenbach, 2022, under review) [1].
+(Thornton, Mandic, and Reichenbach, 2022, under review) [1].
 
 ## Overview
 
