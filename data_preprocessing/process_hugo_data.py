@@ -53,7 +53,6 @@ def process_eeg(participant_idx, lengths):
     raw = read_raw_brainvision(eeg_filepath(participant), preload=True)
     raw = raw.drop_channels('Sound')
 
-    #raw = raw.set_eeg_reference('average')
     raw.filter(None, upbe)
     raw.resample(125)
     raw.filter(lpbe, None)

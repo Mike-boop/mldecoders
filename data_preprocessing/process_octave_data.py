@@ -77,8 +77,6 @@ def process_eeg(subject, condition, part):
         raw = read_raw_brainvision(f"/media/mdt20/Storage/data/Octave/raw-YH/{subject}/{subject}_{condition}_{part}.vhdr", preload=True)
     raw.drop_channels('Sound')
 
-    #raw.set_eeg_reference('average')
-
     raw.filter(None, upbe)
     raw.resample(125)
 
