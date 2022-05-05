@@ -151,8 +151,8 @@ def get_predictions(participant):
 def main():
 
      setup_results_dir()
-     #tune_dnns(models=['fcnn'], load=False)
-     #train_models()
+     tune_dnns(models=['fcnn', 'cnn'], load=False)
+     train_models()
      for participant in range(13):
           get_predictions(participant)
 

@@ -45,8 +45,8 @@ def tune_lrs(participant, models=['cnn', 'fcnn']):
           cnn_study = optuna.create_study(
                direction="maximize",
                sampler=optuna.samplers.RandomSampler(seed=0),
-               pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=2)
           )
+
           cnn_study.optimize(cnn_objective, n_trials=30)
           cnn_summary = cnn_study.trials_dataframe()
           cnn_summary.to_csv(os.path.join(results_path, 'trained_models', 'hugo_subject_specific', f'cnn_lr_search_P{participant:02d}.csv'))
@@ -74,7 +74,6 @@ def tune_lrs(participant, models=['cnn', 'fcnn']):
           fcnn_study = optuna.create_study(
                direction="maximize",
                sampler=optuna.samplers.RandomSampler(seed=0),
-               #pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=2)
           )
           fcnn_study.optimize(fcnn_objective, n_trials=30)
           fcnn_summary = fcnn_study.trials_dataframe()

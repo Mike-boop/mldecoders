@@ -79,7 +79,7 @@ def main():
 
      setup_results_dir()
      for participant in range(13):
-          train_models(participant, models=['fcnn'])
+          train_models(participant)
           get_predictions(participant)
 
      ground_truth = get_ground_truth(data_file, range(9), source='hugo')

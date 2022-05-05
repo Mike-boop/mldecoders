@@ -24,7 +24,7 @@ print(f'running analysis with results directory {results_path} and data file {da
 train_parts={
     'lb':[1,2],
     'hb':[1,2],
-    'clean':[1,2]
+    'clean':[1,2,3,4]
 }
 
 val_parts={
@@ -57,7 +57,6 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
         cnn_study = optuna.create_study(
           direction="maximize",
           sampler=optuna.samplers.RandomSampler(seed=0)
-          #pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=2)
         )
         cnn_study.optimize(cnn_objective, n_trials=30)
         cnn_summary = cnn_study.trials_dataframe()
@@ -72,7 +71,6 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
         fcnn_mdl_kwargs = json.load(open(os.path.join(results_path, 'trained_models', 'hugo_population', 'fcnn_mdl_kwargs.json'), 'r'))
         fcnn_train_params = json.load(open(os.path.join(results_path, 'trained_models', 'hugo_population', 'fcnn_train_params.json'), 'r'))
         del fcnn_train_params['lr']
-        del fcnn_train_params['weight_decay']
 
         def fcnn_objective(trial):
 
@@ -86,8 +84,8 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
         fcnn_study = optuna.create_study(
             direction="maximize",
             sampler=optuna.samplers.RandomSampler(seed=0),
-            #pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=2)
         )
+
         fcnn_study.optimize(fcnn_objective, n_trials=30)
         fcnn_summary = fcnn_study.trials_dataframe()
         fcnn_summary.to_csv(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'fcnn_lr_search_{participant}.csv'))
@@ -155,7 +153,7 @@ def get_predictions(participant, condition='clean'):
     np.save(os.path.join(results_path, 'predictions', 'octave_subject_specific', f'attended_ground_truth_{participant}_{condition}.npy'), attended_ground_truth)
     np.save(os.path.join(results_path, 'predictions', 'octave_subject_specific', f'unattended_ground_truth_{participant}_{condition}.npy'), unattended_ground_truth)
 
-def main():#exclude YH08 who has bad lb data
+def main():
 
     setup_results_dir()
     for participant in ["YH00", "YH01", "YH02", "YH03",
