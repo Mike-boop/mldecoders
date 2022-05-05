@@ -57,26 +57,3 @@ def get_stars(p):
 def bitrate(accuracy, classes=2, window=1):
     bitrate = np.log2(classes) + accuracy*np.log2(accuracy) + (1-accuracy)*np.log2((1-accuracy)/(classes-1))
     return bitrate*60/window #bits/min
-
-# def get_corrs(participants, batch_size, cond):
-
-#     corrs = {}
-
-#     for participant in participants:
-
-#         atteneded_env = np.load(f'predictions/attended_ground_truth_{participant}_{cond}.npy')
-#         unatteneded_env = np.load(f'predictions/unattended_ground_truth_{participant}_{cond}.npy')
-
-#         for mdl in ['ridge', 'cnn', 'fcnn']:
-
-
-#             predictions = np.load(f'predictions/{mdl}_predictions_{participant}_{cond}.npy')
-
-#             corrs[(mdl, 'attended', participant)] = (
-#                 get_scores(atteneded_env, predictions, metric=pear, batch_size=batch_size)
-#             )
-#             corrs[(mdl, 'unattended', participant)] = (
-#                 get_scores(unatteneded_env, predictions, metric=pear, batch_size=batch_size)
-#             )
-
-#     return pd.DataFrame.from_dict(corrs)

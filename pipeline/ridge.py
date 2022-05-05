@@ -64,6 +64,8 @@ class Ridge:
         S = S[s_ind]
         V = V[:, s_ind]
 
+        # optional pcr stage
+
         # # Pick eigenvalues close to zero, remove them and corresponding eigenvectors
         # # and compute the average
         # tol = np.finfo(float).eps
