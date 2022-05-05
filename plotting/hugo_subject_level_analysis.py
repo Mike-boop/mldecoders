@@ -6,12 +6,12 @@ from scipy.stats import ttest_ind, ttest_rel
 from statsmodels.stats import multitest
 
 np.random.seed(0)
-study = 'hugo_leave_one_out'
+study = 'hugo_population'
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
 colors = plotting_config['colors']
 models = plotting_config['models']
-results_dir = "results/0.5-8Hz"
+results_dir = "results/0.5-8Hz-archive"
 
 path = os.path.join(results_dir, 'predictions', study)
 
@@ -60,13 +60,13 @@ p_cnn_fcnn = []
 
 for participant_idx in sorted_idx:
     p_ridge_cnn.append(
-        ttest_ind(scores['cnn'][participant_idx], scores['ridge'][participant_idx], alternative='greater')[1]
+        ttest_rel(scores['cnn'][participant_idx], scores['ridge'][participant_idx], alternative='greater')[1]
         )
     p_ridge_fcnn.append(
-        ttest_ind(scores['fcnn'][participant_idx], scores['ridge'][participant_idx], alternative='greater')[1]
+        ttest_rel(scores['fcnn'][participant_idx], scores['ridge'][participant_idx], alternative='greater')[1]
         )
     p_cnn_fcnn.append(
-        ttest_ind(scores['fcnn'][participant_idx], scores['cnn'][participant_idx], alternative='two-sided')[1]
+        ttest_rel(scores['fcnn'][participant_idx], scores['cnn'][participant_idx], alternative='two-sided')[1]
         )
 
 p_vals = multitest.fdrcorrection(p_ridge_cnn + p_ridge_fcnn + p_cnn_fcnn)[1]

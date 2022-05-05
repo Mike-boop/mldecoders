@@ -4,8 +4,7 @@ import numpy as np
 import json
 import os
 from pipeline.helpers import get_scores, add_sig, get_stars
-from scipy.stats import ranksums, wilcoxon, ttest_rel
-from statsmodels.stats import multitest
+from scipy.stats import ttest_rel
 
 results_dir = "results/0.5-8Hz"
 results_path = os.path.join(results_dir, 'predictions', 'octave_subject_specific')

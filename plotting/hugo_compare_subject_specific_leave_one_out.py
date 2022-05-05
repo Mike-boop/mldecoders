@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import numpy as np
 import json
 import os
 from pipeline.helpers import get_scores, add_sig, get_stars
-from scipy.stats import wilcoxon, ttest_rel
-from statsmodels.stats import multitest
+from scipy.stats import ttest_rel
 import pandas as pd
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))

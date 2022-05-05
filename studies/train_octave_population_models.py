@@ -1,5 +1,5 @@
 from pipeline.training_functions import train_dnn, train_ridge
-from pipeline.evaluation_functions import get_dnn_predictions, get_ground_truth, get_conditions
+from pipeline.evaluation_functions import get_dnn_predictions, get_conditions
 from pipeline.datasets import OctaveMapped
 from torch.utils.data import DataLoader
 from pipeline.dnn import CNN, FCNN
