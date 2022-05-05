@@ -78,35 +78,35 @@ ax.spines['top'].set_visible(False)
 
 plt.savefig(os.path.join(results_dir, "plots", "octave_subject_specific_decoding_bitrate.pdf"))
 
-# plt.figure()
+plt.figure()
 
-# width = 0.6
+width = 0.6
 
-# for i, correlation_window in enumerate(correlation_windows):
-#     for j, model in enumerate(models):
-#         bp = plt.boxplot(scores[model][i],
-#                     positions = [3*i+(j-1)*width*1.2],
-#                     patch_artist=True,
-#                     boxprops = {'facecolor':colors[model], 'edgecolor':'black'},
-#                     medianprops={'color':'yellow'},
-#                     flierprops={'marker':'x'},
-#                     widths=width)
+for i, correlation_window in enumerate(correlation_windows):
+    for j, model in enumerate(models):
+        bp = plt.boxplot(scores[model][i],
+                    positions = [3*i+(j-1)*width*1.2],
+                    patch_artist=True,
+                    boxprops = {'facecolor':colors[model], 'edgecolor':'black'},
+                    medianprops={'color':'yellow'},
+                    flierprops={'marker':'x'},
+                    widths=width)
 
-# plt.title("Attention decoding accuracy vs window size")
-# plt.xticks([0, 3, 6], ['2 s window', '5 s window', '10 s window'])
-# plt.ylabel("Decoding accuracy")
+plt.title("Attention decoding accuracy vs window size")
+plt.xticks([0, 3, 6], ['2 s window', '5 s window', '10 s window'])
+plt.ylabel("Decoding accuracy")
 
-# handles = [plt.Rectangle((0,0),1,1, facecolor=colors['ridge'], edgecolor='black'),
-#                 plt.Rectangle((0,0),1,1, facecolor=colors['cnn'], edgecolor='black'),
-#                 plt.Rectangle((0,0),1,1, facecolor=colors['fcnn'], edgecolor='black')]
+handles = [plt.Rectangle((0,0),1,1, facecolor=colors['ridge'], edgecolor='black'),
+                plt.Rectangle((0,0),1,1, facecolor=colors['cnn'], edgecolor='black'),
+                plt.Rectangle((0,0),1,1, facecolor=colors['fcnn'], edgecolor='black')]
 
-# plt.legend(handles, ['Ridge', 'CNN', 'FCNN'], frameon=False)
+plt.legend(handles, ['Ridge', 'CNN', 'FCNN'], frameon=False)
 
-# ax = plt.gca()
-# ax.spines['right'].set_visible(False)
-# ax.spines['top'].set_visible(False)
+ax = plt.gca()
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
 
-# plt.ylim(0.48, 1.02)
-# plt.savefig(os.path.join(results_dir, "plots", "octave_subject_specific_decoding_pooled.pdf"))
+plt.ylim(0.48, 1.02)
+plt.savefig(os.path.join(results_dir, "plots", "octave_subject_specific_decoding_pooled.pdf"))
 
 plt.show()
