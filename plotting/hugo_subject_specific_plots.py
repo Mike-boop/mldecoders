@@ -11,7 +11,10 @@ np.random.seed(0)
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
 colors = plotting_config['colors']
 models = plotting_config['models']
-results_dir = "results/0.5-8Hz"
+results_dir = "results/0.5-8Hz-090522"
+
+if not os.path.exists(os.path.join(results_dir, 'plots')):
+    os.mkdir(os.path.join(results_dir, 'plots'))
 
 path = os.path.join(results_dir, 'predictions', 'hugo_subject_specific')
 
@@ -72,6 +75,7 @@ plt.close()
 ####################
 # Mean/std plot
 ####################
+
 
 correlation_windows = list(range(3, 16)) + list(range(20, 51, 10)) + list(range(125, 1251, 125))
 correlation_windows = np.array(correlation_windows)

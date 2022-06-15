@@ -4,7 +4,7 @@ import json
 import os
 from pipeline.helpers import get_scores
 
-results_dir = "results/0.5-8Hz"
+results_dir = "results/0.5-8Hz-090522"
 results_path = os.path.join(results_dir, 'predictions', 'octave_subject_specific')
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))

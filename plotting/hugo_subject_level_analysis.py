@@ -6,14 +6,17 @@ from scipy.stats import ttest_ind, ttest_rel
 from statsmodels.stats import multitest
 
 np.random.seed(0)
-study = 'hugo_population'
+study = 'hugo_leave_one_out'
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
 colors = plotting_config['colors']
 models = plotting_config['models']
-results_dir = "results/0.5-8Hz-archive"
+results_dir = "results/0.5-8Hz-090522"
 
 path = os.path.join(results_dir, 'predictions', study)
+
+if not os.path.exists(os.path.join(results_dir, 'p_vals')):
+    os.mkdir(os.path.join(results_dir, 'p_vals'))
 
 # load scores & order by ridge mean
 
@@ -101,6 +104,7 @@ with open(os.path.join(results_dir, 'p_vals', f'{study}.txt'), 'w') as f:
 
 # population analysis
 
+print('population-level-analysis')
 mean_scores = {k:[np.mean(scores[k][i]) for i in range(13)] for k in scores.keys()}
 
 p_ridge_cnn = ttest_rel(mean_scores['ridge'], mean_scores['cnn'], alternative='less')[1]
@@ -109,3 +113,13 @@ p_fcnn_cnn = ttest_rel(mean_scores['fcnn'], mean_scores['cnn'], alternative='two
 
 [p_ridge_cnn, p_ridge_fcnn, p_fcnn_cnn] = np.array([p_ridge_cnn, p_ridge_fcnn, p_fcnn_cnn])*3
 print([p_ridge_cnn, p_ridge_fcnn, p_fcnn_cnn])
+
+# ratio of means
+
+for window_size in [250, 625, 1250]:
+    scores = {
+    'ridge':np.mean([get_scores(pred, ground_truth, batch_size=window_size) for pred in ridge_predictions]),
+    'cnn'  :np.mean([get_scores(pred, ground_truth, batch_size=window_size) for pred in cnn_predictions]),
+    'fcnn' :np.mean([get_scores(pred, ground_truth, batch_size=window_size) for pred in fcnn_predictions])
+    }
+    print(window_size, (scores['cnn']-scores['ridge'])/scores['ridge'], (scores['fcnn']-scores['ridge'])/scores['ridge'])

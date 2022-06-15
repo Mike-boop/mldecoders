@@ -37,7 +37,7 @@ def setup_results_dir():
     Path(os.path.join(results_path, 'trained_models', 'octave_subject_specific')).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(results_path, 'predictions', 'octave_subject_specific')).mkdir(parents=True, exist_ok=True)
 
-def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
+def tune_lrs(participant, models=['cnn', 'fcnn']):
 
     if 'cnn' in models:
     
@@ -54,11 +54,16 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
                                     train_parts=train_parts, val_parts=val_parts, optuna_trial=trial)
             return accuracy
 
+        gridsampler = optuna.samplers.GridSampler({"lr": [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]})
+        cnn_pruner = optuna.pruners.MedianPruner(n_startup_trials=np.infty)
+
         cnn_study = optuna.create_study(
-          direction="maximize",
-          sampler=optuna.samplers.RandomSampler(seed=0)
+            direction="maximize",
+            sampler=gridsampler,
+            pruner=cnn_pruner   
         )
-        cnn_study.optimize(cnn_objective, n_trials=30)
+
+        cnn_study.optimize(cnn_objective, n_trials=5)
         cnn_summary = cnn_study.trials_dataframe()
         cnn_summary.to_csv(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'cnn_lr_search_{participant}.csv'))
 
@@ -81,12 +86,15 @@ def tune_lrs(participant, models=['cnn', 'fcnn', 'ridge']):
                                     train_parts=train_parts, val_parts=val_parts, optuna_trial=trial)
             return accuracy
 
+        gridsampler = optuna.samplers.GridSampler({"lr": [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]})
+        fcnn_pruner = optuna.pruners.MedianPruner(n_startup_trials=np.infty)
+
         fcnn_study = optuna.create_study(
             direction="maximize",
-            sampler=optuna.samplers.RandomSampler(seed=0),
+            sampler=gridsampler,
+            pruner=fcnn_pruner
         )
-
-        fcnn_study.optimize(fcnn_objective, n_trials=30)
+        fcnn_study.optimize(fcnn_objective, n_trials=5)
         fcnn_summary = fcnn_study.trials_dataframe()
         fcnn_summary.to_csv(os.path.join(results_path, 'trained_models', 'octave_subject_specific', f'fcnn_lr_search_{participant}.csv'))
 

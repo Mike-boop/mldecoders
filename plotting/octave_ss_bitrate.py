@@ -4,7 +4,7 @@ import json
 import os
 from pipeline.helpers import get_scores, bitrate
 
-results_dir = "results/0.5-8Hz"
+results_dir = "results/0.5-8Hz-090522"
 results_path = os.path.join(results_dir, 'predictions', 'octave_subject_specific')
 
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
@@ -54,7 +54,7 @@ for correlation_window in correlation_windows:
         scores[model].append(fM_scores[model]+fW_scores[model])
 
 for model in models:
-    bitrates[model] = [bitrate(np.mean(scores[model][i]),window=correlation_windows[i]/125) for i in range(len(correlation_windows))]
+    bitrates[model] = [bitrate(np.mean(scores[model][i]),window=correlation_windows[i]/125 + 0.4) for i in range(len(correlation_windows))]
 
 labels = {'ridge':'Ridge', 'cnn':'CNN', 'fcnn':'FCNN'}
 
@@ -81,9 +81,9 @@ plt.figure()
 
 width = 0.6
 
-for i, correlation_window in enumerate(correlation_windows):
+for i, correlation_window in enumerate(correlation_windows[2:]):
     for j, model in enumerate(models):
-        bp = plt.boxplot(scores[model][i],
+        bp = plt.boxplot(scores[model][2+i],
                     positions = [3*i+(j-1)*width*1.2],
                     patch_artist=True,
                     boxprops = {'facecolor':colors[model], 'edgecolor':'black'},

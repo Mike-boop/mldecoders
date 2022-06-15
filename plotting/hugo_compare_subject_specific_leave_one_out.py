@@ -9,7 +9,7 @@ import pandas as pd
 plotting_config = json.load(open("plotting/plotting_config.json", "r"))
 colors = plotting_config['colors']
 models = plotting_config['models']
-results_dir = "results/0.5-8Hz"
+results_dir = "results/0.5-8Hz-090522"
 
 # 1. Load data
 

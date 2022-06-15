@@ -42,12 +42,16 @@ def tune_lrs(participant, models=['cnn', 'fcnn']):
                                         model_handle=CNN, **cnn_mdl_kwargs, optuna_trial=trial)
                return accuracy
 
+          gridsampler = optuna.samplers.GridSampler({"lr": [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]})
+
+          cnn_pruner = optuna.pruners.MedianPruner(n_startup_trials=np.infty)
           cnn_study = optuna.create_study(
                direction="maximize",
-               sampler=optuna.samplers.RandomSampler(seed=0),
+               sampler=gridsampler,
+               pruner=cnn_pruner   
           )
 
-          cnn_study.optimize(cnn_objective, n_trials=30)
+          cnn_study.optimize(cnn_objective, n_trials=5)
           cnn_summary = cnn_study.trials_dataframe()
           cnn_summary.to_csv(os.path.join(results_path, 'trained_models', 'hugo_subject_specific', f'cnn_lr_search_P{participant:02d}.csv'))
 
@@ -61,21 +65,24 @@ def tune_lrs(participant, models=['cnn', 'fcnn']):
           fcnn_mdl_kwargs = json.load(open(os.path.join(results_path, 'trained_models', 'hugo_population', 'fcnn_mdl_kwargs.json'), 'r'))
           fcnn_train_params = json.load(open(os.path.join(results_path, 'trained_models', 'hugo_population', 'fcnn_train_params.json'), 'r'))
           del fcnn_train_params['lr']
-          del fcnn_train_params['weight_decay']
 
           def fcnn_objective(trial):
 
-               lr =  trial.suggest_loguniform('lr', 1e-7, 1e-2)
+               lr =  trial.suggest_loguniform('lr', 1e-8, 1e-1)
                print('>',lr)
                accuracy, _ = train_dnn(data_file, participant, None, **fcnn_train_params, lr=lr, epochs=20, early_stopping_patience=3,
                                         model_handle=FCNN, **fcnn_mdl_kwargs, optuna_trial=trial)
                return accuracy
 
+          gridsampler = optuna.samplers.GridSampler({"lr": [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]})
+          fcnn_pruner = optuna.pruners.MedianPruner(n_startup_trials=np.infty)
+
           fcnn_study = optuna.create_study(
                direction="maximize",
-               sampler=optuna.samplers.RandomSampler(seed=0),
+               sampler=gridsampler,
+               pruner=fcnn_pruner
           )
-          fcnn_study.optimize(fcnn_objective, n_trials=30)
+          fcnn_study.optimize(fcnn_objective, n_trials=5)
           fcnn_summary = fcnn_study.trials_dataframe()
           fcnn_summary.to_csv(os.path.join(results_path, 'trained_models', 'hugo_subject_specific', f'fcnn_lr_search_P{participant:02d}.csv'))
 
