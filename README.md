@@ -1,7 +1,7 @@
 # mldecoders
 
 This repository contains all of the code used in our publication "Robust decoding of the speech envelope from EEG recordings through deep neural networks" 
-(Thornton, Mandic, and Reichenbach, 2022, under review) [1].
+(Thornton, Mandic, and Reichenbach, 2022) [1].
 
 ## Overview
 
@@ -47,7 +47,7 @@ Please email Professor Reichenbach at <tobias.j.reichenbach@fau.de> for data req
 
 ## References
 
-[1] M. Thornton, D. P. Mandic and T. Reichenbach, "Robust decoding of the speech envelope from EEG recordings through deep neural networks." 2022. UNDER REVIEW.
+[1] M. Thornton, D. P. Mandic and T. Reichenbach, "Robust decoding of the speech envelope from EEG recordings through deep neural networks," _Journal of Neural Engineering_, 10.1088/1741-2552/ac7976.
 
 [2] H. Weissbart, K. D. Kandylaki and T. Reichenbach, “Cortical tracking of surprisal during continuous speech comprehension,” _Journal of Cognitive Neuroscience_, vol. 32, no. 1, pp. 155–166, Jan. 2020.
  
