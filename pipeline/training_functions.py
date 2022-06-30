@@ -23,7 +23,7 @@ else:
 
 def train_dnn(data_dir,
               participants,
-              checkpoint_path,
+              checkpoint_path=None,
               dataset='hugo',
               model_handle=CNN,
               train_parts=range(9),
