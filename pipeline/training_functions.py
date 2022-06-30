@@ -35,6 +35,7 @@ def train_dnn(data_dir,
               early_stopping_patience=torch.inf,
               optuna_trial=None,
               seed=0,
+              workers=16,
               **mdl_kwargs):
 
     '''
@@ -60,10 +61,10 @@ def train_dnn(data_dir,
         assert isinstance(val_parts, Iterable) and type(val_parts) is not dict
 
         train_dataset = HugoMapped(train_parts, data_dir, participant=participants, num_input=mdl.input_length)
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler = torch.randperm(len(train_dataset)), num_workers=16, pin_memory=True)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler = torch.randperm(len(train_dataset)), num_workers=workers, pin_memory=True)
 
         val_dataset = HugoMapped(val_parts, data_dir, participant=participants, num_input=mdl.input_length)
-        val_loader = DataLoader(val_dataset, batch_size=1250, sampler = torch.randperm(len(val_dataset)), num_workers=16, pin_memory=True)
+        val_loader = DataLoader(val_dataset, batch_size=1250, sampler = torch.randperm(len(val_dataset)), num_workers=workers, pin_memory=True)
 
     elif dataset=='octave':
 
@@ -72,11 +73,11 @@ def train_dnn(data_dir,
 
         train_datasets = [OctaveMapped(train_parts[cond], data_dir, participant=participants, num_input=mdl.input_length, condition=cond) for cond in train_parts]
         train_dataset = functools.reduce(operator.add, train_datasets)    
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler = torch.randperm(len(train_dataset)), num_workers=16, pin_memory=True)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler = torch.randperm(len(train_dataset)), num_workers=workers, pin_memory=True)
 
         val_datasets = [OctaveMapped(val_parts[cond], data_dir, participant=participants, num_input=mdl.input_length, condition=cond) for cond in val_parts]
         val_dataset = functools.reduce(operator.add, val_datasets)
-        val_loader = DataLoader(val_dataset, batch_size=1250, sampler = torch.randperm(len(val_dataset)), num_workers=16, pin_memory=True)
+        val_loader = DataLoader(val_dataset, batch_size=1250, sampler = torch.randperm(len(val_dataset)), num_workers=workers, pin_memory=True)
 
     # early stopping parameters
 
