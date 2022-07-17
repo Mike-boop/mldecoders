@@ -16,6 +16,9 @@ class FCNN(nn.Module):
         self.activations = torch.nn.ModuleList([torch.nn.Tanh() for i in range(len(units)-2)])
         self.dropouts = torch.nn.ModuleList([torch.nn.Dropout(p=dropout_rate) for i in range(len(units)-2)])
 
+    def __repr__(self):
+        return repr('FCNN')
+
     def forward(self, x):
         x = x.flatten(start_dim=1)
         for i, layer in enumerate(self.fully_connected[:-1]):
@@ -72,6 +75,9 @@ class CNN(nn.Module):
         self.activation1 = torch.nn.ELU()
         self.activation2 = torch.nn.ELU()
         self.activation3 = torch.nn.ELU()
+
+    def __repr__(self):
+        return repr('CNN')
      
     def forward(self, x):
         #x shape = [batch, C, T]
