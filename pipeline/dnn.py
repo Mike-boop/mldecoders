@@ -16,8 +16,8 @@ class FCNN(nn.Module):
         self.activations = torch.nn.ModuleList([torch.nn.Tanh() for i in range(len(units)-2)])
         self.dropouts = torch.nn.ModuleList([torch.nn.Dropout(p=dropout_rate) for i in range(len(units)-2)])
 
-    def __repr__(self):
-        return repr('FCNN')
+    def __str__(self):
+        return 'FCNN'
 
     def forward(self, x):
         x = x.flatten(start_dim=1)
@@ -76,8 +76,8 @@ class CNN(nn.Module):
         self.activation2 = torch.nn.ELU()
         self.activation3 = torch.nn.ELU()
 
-    def __repr__(self):
-        return repr('CNN')
+    def __str__(self):
+        return 'CNN'
      
     def forward(self, x):
         #x shape = [batch, C, T]
